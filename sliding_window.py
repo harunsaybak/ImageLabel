@@ -16,7 +16,7 @@ stepSize = winW / 2
 output_folder = 'images'
 resolution = [1920, 1080]
 accept_key = 121
-exit_key = keyboard.is_pressed('n')
+exit_key = 27  # ESC
 
 
 bound = 200
@@ -51,6 +51,12 @@ image = cv2.imread("test1.jpg")
 
 i = 0
 labels = []
+
+last_line = 0
+with open('photoindex.txt', 'r') as f:
+	lines = f.read().splitlines()
+	last_line = lines[-1]
+last_line = str(int(last_line) + 1)
 for (x, y, window) in sliding_window(image, stepSize=stepSize, windowSize=(winW, winH), progress = progress0):
 
 	i = i + 1
@@ -76,12 +82,12 @@ for (x, y, window) in sliding_window(image, stepSize=stepSize, windowSize=(winW,
 	clone = image.copy()[y1:, x1:]
 	cv2.rectangle(clone, (x, y), (x + winW, y + winH), (0, 255, 0), 2)
 	cv2.imshow("Window", clone)
-	name = '{0}/{1}.jpg'.format(output_folder, str(i).zfill(5))
+	name = '{0}/{1}.jpg'.format(output_folder, str(last_line).zfill(5))
 	#print(name)
 	cv2.imwrite(name,window)
-
-
-
+	with open('photoindex.txt', 'a') as f:
+		f.write('{0}\n'.format(str(last_line)))
+	last_line = str(int(last_line) + 1)
 	key = cv2.waitKey(0)
 	if key == exit_key:
 
@@ -94,10 +100,11 @@ for (x, y, window) in sliding_window(image, stepSize=stepSize, windowSize=(winW,
 	
 	#############################################################################
 	if key == accept_key:
-		copyfile(name, '{0}/{1}.jpg'.format(positive_folder, str(i).zfill(5)))
+		copyfile(name, '{0}/{1}.jpg'.format(positive_folder, str(last_line).zfill(5)))
 	else:
-		copyfile(name, '{0}/{1}.jpg'.format(negative_folder, str(i).zfill(5)))
+		copyfile(name, '{0}/{1}.jpg'.format(negative_folder, str(last_line).zfill(5)))
 	#############################################################################
+
 
 
 #print labels
@@ -109,5 +116,6 @@ with open('images/labels.txt', 'a') as f:
 			f.write('{0}.jpg {1}\n'.format(str(i).zfill(5), str(1)))
 		else:
 			f.write('{0}.jpg {1}\n'.format(str(i).zfill(5), str(0)))
+
 
 cPickle.dump(progress, open('images/progress.pik', 'wb')) 
